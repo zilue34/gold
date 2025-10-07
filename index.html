@@ -63,52 +63,47 @@
                 align-items: stretch;
             }
 
-            /* 手機版表格樣式 */
+            /* --- 手機版表格最終修正 --- */
             .info-table thead {
-                display: none; /* 隱藏表頭 */
+                display: none;
             }
             .info-table, .info-table tbody, .info-table tr, .info-table td {
                 display: block;
                 width: 100%;
             }
             .info-table tr {
-                margin-bottom: 20px; /* 增加每行之間的間距 */
+                margin-bottom: 20px;
                 border: 1px solid #ddd;
-                border-radius: 8px; /* 圓角卡片 */
+                border-radius: 8px;
                 overflow: hidden;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 輕微陰影 */
             }
             .info-table td {
                 border: none;
                 border-bottom: 1px solid #eee;
-                padding: 10px 15px; /* 調整內邊距 */
-                position: relative;
-                padding-left: 140px; /* 為偽元素標題留出空間 */
+                padding: 12px 15px;
             }
             .info-table td:last-child {
                 border-bottom: none;
             }
-            /* 針對佔比區間特別處理，作為卡片的主標題 */
-            .info-table tr td:first-child {
-                background-color: #fffae6; /* 淺黃背景突出區間 */
-                font-size: 1.1em;
-                font-weight: bold;
-                padding-left: 15px; /* 移除左邊的 data-label 空間 */
-                color: #e69500; /* 突出顏色 */
-                text-align: center; /* 居中顯示 */
-            }
-            .info-table tr td:first-child::before {
-                content: none; /* 隱藏重複的 "佔比區間" data-label */
-            }
-
+            /* 將 data-label 顯示為區塊標題 */
             .info-table td::before {
                 content: attr(data-label);
-                position: absolute;
-                left: 15px; /* 標題左側對齊 */
-                width: 120px; /* 預留寬度 */
+                display: block; /* 讓標題獨佔一行 */
                 font-weight: bold;
-                color: #777;
-                white-space: nowrap; /* 避免標題換行 */
+                color: #555;
+                margin-bottom: 5px; /* 標題和內容間的距離 */
+            }
+            /* 針對佔比區間，作為卡片主標題 */
+            .info-table tr td:first-child {
+                background-color: #fffae6;
+                text-align: center;
+            }
+            .info-table tr td:first-child::before {
+                display: none; /* 隱藏 "佔比區間" 的 data-label */
+            }
+            .info-table tr td:first-child strong {
+                 font-size: 1.1em;
+                 color: #e69500;
             }
         }
     </style>
