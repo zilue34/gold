@@ -9,7 +9,34 @@
         .container { max-width: 600px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         h1, h2 { text-align: center; color: #333; border-bottom: 2px solid #ffcc00; padding-bottom: 10px; margin-bottom: 30px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        input[type="number"], select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+            /* --- 關鍵修改：統一外觀 --- */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-color: #fff;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpolygon%20points%3D%220%2C0%2020%2C0%2010%2C10%22%20style%3D%22fill%3A%23666666%3B%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 10px;
+            padding-right: 30px; /* 避免文字蓋住箭頭 */
+        }
+        /* 移除 number input 的預設箭頭，讓風格更統一 */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
         button { width: 100%; padding: 15px; background-color: #ffaa00; color: white; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; margin-top: 10px; }
         button:hover { background-color: #e69500; }
         .input-group { display: flex; gap: 10px; align-items: flex-end; }
@@ -18,6 +45,7 @@
         .note { margin-top: 25px; font-size: 0.9em; color: #888; text-align: center; }
         .unit { font-weight: normal; color: #000; }
         .section-divider { margin-top: 40px; }
+        #exchangeRateDiv { display: none; } /* 預設隱藏匯率匡 */
     </style>
 </head>
 <body>
@@ -42,8 +70,7 @@
     </div>
 
     <h2>換算結果</h2>
-    <div id="results">
-        </div>
+    <div id="results"></div>
 
     <div class="note">
         <p>* 換算基準：1 錢 = 3.75 公克；1 盎司 = 31.1035 公克。</p>
@@ -69,8 +96,24 @@
         </div>
     </div>
 
-    <label for="jewelryPrice">金飾/銀飾 總價：</label>
-    <input type="number" id="jewelryPrice" placeholder="輸入飾品總購買價" min="0">
+    <div class="input-group">
+        <div style="flex-basis: 60%;">
+            <label for="jewelryPrice">金飾/銀飾 總價：</label>
+            <input type="number" id="jewelryPrice" placeholder="輸入飾品總購買價" min="0">
+        </div>
+        <div style="flex-basis: 40%;">
+            <label for="currency">幣別：</label>
+            <select id="currency" onchange="toggleExchangeRate()">
+                <option value="TWD">台幣 (TWD)</option>
+                <option value="USD">美元 (USD)</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="exchangeRateDiv">
+        <label for="exchangeRate">美元匯率 (USD to TWD)：</label>
+        <input type="number" id="exchangeRate" placeholder="例如：32.5" min="0">
+    </div>
 
     <button onclick="calculateCraftsmanship()">計算工錢</button>
 
@@ -80,115 +123,102 @@
 
 <script>
     // 核心換算常數
-    const QIAN_TO_G = 3.75;          // 1 錢 = 3.75 克
-    const OUNCE_TO_G = 31.1035;      // 1 盎司 = 31.1035 克
-    const LIANG_TO_QIAN = 10;        // 1 兩 = 10 錢
+    const QIAN_TO_G = 3.75;
+    const OUNCE_TO_G = 31.1035;
+    const LIANG_TO_QIAN = 10;
 
     function convertUnits() {
         const weightInput = document.getElementById('weight').value;
         const unitInput = document.getElementById('unit').value;
         const resultsDiv = document.getElementById('results');
-
         const inputWeight = parseFloat(weightInput);
         if (isNaN(inputWeight) || inputWeight <= 0) {
             resultsDiv.innerHTML = '<div>請輸入有效的重量數值。</div>';
             return;
         }
-
-        let baseGram; 
+        let baseGram;
         switch (unitInput) {
-            case 'qian':
-                baseGram = inputWeight * QIAN_TO_G;
-                break;
-            case 'liang':
-                baseGram = inputWeight * LIANG_TO_QIAN * QIAN_TO_G;
-                break;
-            case 'gram':
-                baseGram = inputWeight;
-                break;
-            case 'ounce':
-                baseGram = inputWeight * OUNCE_TO_G;
-                break;
+            case 'qian': baseGram = inputWeight * QIAN_TO_G; break;
+            case 'liang': baseGram = inputWeight * LIANG_TO_QIAN * QIAN_TO_G; break;
+            case 'gram': baseGram = inputWeight; break;
+            case 'ounce': baseGram = inputWeight * OUNCE_TO_G; break;
         }
-
         const resultQian = baseGram / QIAN_TO_G;
         const resultLiang = resultQian / LIANG_TO_QIAN;
-        const resultGram = baseGram;
-        const resultOunce = baseGram / OUNCE_TO_G;
-
         resultsDiv.innerHTML = `
             <div><strong>${resultQian.toFixed(4)}</strong> <span class="unit">台錢 (錢)</span></div>
             <div><strong>${resultLiang.toFixed(4)}</strong> <span class="unit">台兩 (兩)</span></div>
-            <div><strong>${resultGram.toFixed(4)}</strong> <span class="unit">公克 (g)</span></div>
-            <div><strong>${resultOunce.toFixed(4)}</strong> <span class="unit">盎司 (oz)</span></div>
+            <div><strong>${baseGram.toFixed(4)}</strong> <span class="unit">公克 (g)</span></div>
+            <div><strong>${(baseGram / OUNCE_TO_G).toFixed(4)}</strong> <span class="unit">盎司 (oz)</span></div>
         `;
     }
 
+    function toggleExchangeRate() {
+        const currency = document.getElementById('currency').value;
+        const exchangeRateDiv = document.getElementById('exchangeRateDiv');
+        exchangeRateDiv.style.display = (currency === 'USD') ? 'block' : 'none';
+    }
+
     function calculateCraftsmanship() {
-        const weightInput = document.getElementById('weight').value;
-        const weightUnit = document.getElementById('unit').value;
-        const metalPriceInput = document.getElementById('metalPrice').value;
-        const priceUnit = document.getElementById('priceUnit').value;
-        const jewelryPriceInput = document.getElementById('jewelryPrice').value;
         const resultDiv = document.getElementById('craftsmanshipResult');
+        const inputWeight = parseFloat(document.getElementById('weight').value);
+        const metalPrice = parseFloat(document.getElementById('metalPrice').value);
+        let jewelryPrice = parseFloat(document.getElementById('jewelryPrice').value);
+        const currency = document.getElementById('currency').value;
+        const exchangeRate = parseFloat(document.getElementById('exchangeRate').value);
 
-        const inputWeight = parseFloat(weightInput);
-        const metalPrice = parseFloat(metalPriceInput);
-        const jewelryPrice = parseFloat(jewelryPriceInput);
-
-        if (isNaN(inputWeight) || inputWeight <= 0 || isNaN(metalPrice) || metalPrice <= 0 || isNaN(jewelryPrice) || jewelryPrice <= 0) {
+        if (isNaN(inputWeight) || isNaN(metalPrice) || isNaN(jewelryPrice) || inputWeight <= 0 || metalPrice <= 0 || jewelryPrice <= 0) {
             resultDiv.innerHTML = '<div>請輸入有效的重量、單價與總價。</div>';
             return;
         }
+        if (currency === 'USD' && (isNaN(exchangeRate) || exchangeRate <= 0)) {
+            resultDiv.innerHTML = '<div>請輸入有效的美元匯率。</div>';
+            return;
+        }
 
-        // --- 核心修改：將所有單位換算成 "台錢" 進行計算 ---
-
-        // 1. 將輸入的重量，全部換算成 "台錢"
+        // 1. 將重量換算成 "台錢"
+        const weightUnit = document.getElementById('unit').value;
         let weightInQian;
         switch (weightUnit) {
-            case 'qian':
-                weightInQian = inputWeight;
-                break;
-            case 'liang':
-                weightInQian = inputWeight * LIANG_TO_QIAN;
-                break;
-            case 'gram':
-                weightInQian = inputWeight / QIAN_TO_G;
-                break;
-            case 'ounce':
-                weightInQian = (inputWeight * OUNCE_TO_G) / QIAN_TO_G;
-                break;
+            case 'qian': weightInQian = inputWeight; break;
+            case 'liang': weightInQian = inputWeight * LIANG_TO_QIAN; break;
+            case 'gram': weightInQian = inputWeight / QIAN_TO_G; break;
+            case 'ounce': weightInQian = (inputWeight * OUNCE_TO_G) / QIAN_TO_G; break;
         }
 
-        // 2. 將輸入的單價，全部換算成 "每台錢" 的價格
+        // 2. 將單價換算成 "每台錢"
+        const priceUnit = document.getElementById('priceUnit').value;
         let pricePerQian;
         switch (priceUnit) {
-            case 'qian':
-                pricePerQian = metalPrice;
-                break;
-            case 'gram':
-                pricePerQian = metalPrice * QIAN_TO_G;
-                break;
-            case 'ounce':
-                pricePerQian = (metalPrice / OUNCE_TO_G) * QIAN_TO_G;
-                break;
+            case 'qian': pricePerQian = metalPrice; break;
+            case 'gram': pricePerQian = metalPrice * QIAN_TO_G; break;
+            case 'ounce': pricePerQian = (metalPrice / OUNCE_TO_G) * QIAN_TO_G; break;
         }
         
-        // 3. 計算成本與工錢
-        const materialCost = weightInQian * pricePerQian;
-        const craftsmanshipCost = jewelryPrice - materialCost;
-
-        if (craftsmanshipCost < 0) {
-            resultDiv.innerHTML = `
-                <div>材料成本: <strong>${Math.round(materialCost)}</strong> 元</div>
-                <div>總價似乎低於材料成本，請檢查輸入數值。</div>
+        // 3. 計算材料成本 (先不論幣別)
+        let materialCost = weightInQian * pricePerQian;
+        let resultHtml;
+        
+        // 4. 處理幣別與匯率換算
+        if (currency === 'USD') {
+            const materialCostTWD = materialCost * exchangeRate;
+            const jewelryPriceTWD = jewelryPrice * exchangeRate;
+            const craftsmanshipCostTWD = jewelryPriceTWD - materialCostTWD;
+            
+            resultHtml = `
+                <div>材料成本: <strong>${Math.round(materialCost)}</strong> (USD) ≈ <strong>${Math.round(materialCostTWD)}</strong> 元 (台幣)</div>
+                <div>飾品總價: <strong>${jewelryPrice}</strong> (USD) ≈ <strong>${Math.round(jewelryPriceTWD)}</strong> 元 (台幣)</div>
+                <div style="border-left-color: #007bff;">工錢約: <strong>${Math.round(craftsmanshipCostTWD)}</strong> 元 (台幣)</div>
             `;
-        } else {
-            resultDiv.innerHTML = `
-                <div>材料成本約: <strong>${Math.round(materialCost)}</strong> 元</div>
-                <div>工錢約: <strong>${Math.round(craftsmanshipCost)}</strong> 元</div>
+        } else { // 台幣 (TWD)
+            const craftsmanshipCost = jewelryPrice - materialCost;
+            resultHtml = `
+                <div>材料成本約: <strong>${Math.round(materialCost)}</strong> 元 (台幣)</div>
+                <div style="border-left-color: #007bff;">工錢約: <strong>${Math.round(craftsmanshipCost)}</strong> 元 (台幣)</div>
             `;
         }
+
+        resultDiv.innerHTML = resultHtml;
     }
 
     // 頁面載入時先執行一次計算
