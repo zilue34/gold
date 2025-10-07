@@ -17,7 +17,6 @@
             border-radius: 5px;
             box-sizing: border-box;
             font-size: 16px;
-            /* --- 關鍵修改：統一外觀 --- */
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
@@ -26,9 +25,8 @@
             background-repeat: no-repeat;
             background-position: right 10px center;
             background-size: 10px;
-            padding-right: 30px; /* 避免文字蓋住箭頭 */
+            padding-right: 30px; 
         }
-        /* 移除 number input 的預設箭頭，讓風格更統一 */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
           -webkit-appearance: none; 
@@ -45,7 +43,7 @@
         .note { margin-top: 25px; font-size: 0.9em; color: #888; text-align: center; }
         .unit { font-weight: normal; color: #000; }
         .section-divider { margin-top: 40px; }
-        #exchangeRateDiv { display: none; } /* 預設隱藏匯率匡 */
+        #exchangeRateDiv { display: none; }
     </style>
 </head>
 <body>
@@ -82,16 +80,23 @@
     <h2>工錢返算</h2>
     
     <div class="input-group">
-        <div style="flex-basis: 60%;">
+        <div style="flex-basis: 40%;">
             <label for="metalPrice">金/銀 單價：</label>
             <input type="number" id="metalPrice" placeholder="輸入單價" min="0">
         </div>
-        <div style="flex-basis: 40%;">
-            <label for="priceUnit">選擇單價單位：</label>
+        <div style="flex-basis: 30%;">
+            <label for="priceUnit">單價單位：</label>
             <select id="priceUnit">
                 <option value="qian">每台錢</option>
                 <option value="gram">每公克</option>
                 <option value="ounce">每盎司</option>
+            </select>
+        </div>
+        <div style="flex-basis: 30%;">
+            <label for="priceCurrency">單價幣別：</label>
+            <select id="priceCurrency" onchange="toggleExchangeRate()">
+                <option value="TWD">台幣 (TWD)</option>
+                <option value="USD">美元 (USD)</option>
             </select>
         </div>
     </div>
@@ -99,11 +104,11 @@
     <div class="input-group">
         <div style="flex-basis: 60%;">
             <label for="jewelryPrice">金飾/銀飾 總價：</label>
-            <input type="number" id="jewelryPrice" placeholder="輸入飾品總購買價" min="0">
+            <input type="number" id="jewelryPrice" placeholder="輸入總價" min="0">
         </div>
         <div style="flex-basis: 40%;">
-            <label for="currency">幣別：</label>
-            <select id="currency" onchange="toggleExchangeRate()">
+            <label for="totalPriceCurrency">總價幣別：</label>
+            <select id="totalPriceCurrency" onchange="toggleExchangeRate()">
                 <option value="TWD">台幣 (TWD)</option>
                 <option value="USD">美元 (USD)</option>
             </select>
@@ -112,7 +117,7 @@
 
     <div id="exchangeRateDiv">
         <label for="exchangeRate">美元匯率 (USD to TWD)：</label>
-        <input type="number" id="exchangeRate" placeholder="例如：32.5" min="0">
+        <input type="number" id="exchangeRate" placeholder="例如：32.5" min="0" value="32.5">
     </div>
 
     <button onclick="calculateCraftsmanship()">計算工錢</button>
@@ -122,7 +127,6 @@
 </div>
 
 <script>
-    // 核心換算常數
     const QIAN_TO_G = 3.75;
     const OUNCE_TO_G = 31.1035;
     const LIANG_TO_QIAN = 10;
@@ -154,24 +158,33 @@
     }
 
     function toggleExchangeRate() {
-        const currency = document.getElementById('currency').value;
+        const priceCurrency = document.getElementById('priceCurrency').value;
+        const totalPriceCurrency = document.getElementById('totalPriceCurrency').value;
         const exchangeRateDiv = document.getElementById('exchangeRateDiv');
-        exchangeRateDiv.style.display = (currency === 'USD') ? 'block' : 'none';
+        
+        if (priceCurrency === 'USD' || totalPriceCurrency === 'USD') {
+            exchangeRateDiv.style.display = 'block';
+        } else {
+            exchangeRateDiv.style.display = 'none';
+        }
     }
 
     function calculateCraftsmanship() {
         const resultDiv = document.getElementById('craftsmanshipResult');
         const inputWeight = parseFloat(document.getElementById('weight').value);
         const metalPrice = parseFloat(document.getElementById('metalPrice').value);
-        let jewelryPrice = parseFloat(document.getElementById('jewelryPrice').value);
-        const currency = document.getElementById('currency').value;
+        const jewelryPrice = parseFloat(document.getElementById('jewelryPrice').value);
+        
+        const priceCurrency = document.getElementById('priceCurrency').value;
+        const totalPriceCurrency = document.getElementById('totalPriceCurrency').value;
         const exchangeRate = parseFloat(document.getElementById('exchangeRate').value);
 
         if (isNaN(inputWeight) || isNaN(metalPrice) || isNaN(jewelryPrice) || inputWeight <= 0 || metalPrice <= 0 || jewelryPrice <= 0) {
             resultDiv.innerHTML = '<div>請輸入有效的重量、單價與總價。</div>';
             return;
         }
-        if (currency === 'USD' && (isNaN(exchangeRate) || exchangeRate <= 0)) {
+        
+        if ((priceCurrency === 'USD' || totalPriceCurrency === 'USD') && (isNaN(exchangeRate) || exchangeRate <= 0)) {
             resultDiv.innerHTML = '<div>請輸入有效的美元匯率。</div>';
             return;
         }
@@ -186,7 +199,7 @@
             case 'ounce': weightInQian = (inputWeight * OUNCE_TO_G) / QIAN_TO_G; break;
         }
 
-        // 2. 將單價換算成 "每台錢"
+        // 2. 將單價換算成 "每台錢" 的價格 (幣別先不處理)
         const priceUnit = document.getElementById('priceUnit').value;
         let pricePerQian;
         switch (priceUnit) {
@@ -195,33 +208,26 @@
             case 'ounce': pricePerQian = (metalPrice / OUNCE_TO_G) * QIAN_TO_G; break;
         }
         
-        // 3. 計算材料成本 (先不論幣別)
+        // 3. 計算材料成本 (幣別先不處理)
         let materialCost = weightInQian * pricePerQian;
-        let resultHtml;
         
-        // 4. 處理幣別與匯率換算
-        if (currency === 'USD') {
-            const materialCostTWD = materialCost * exchangeRate;
-            const jewelryPriceTWD = jewelryPrice * exchangeRate;
-            const craftsmanshipCostTWD = jewelryPriceTWD - materialCostTWD;
-            
-            resultHtml = `
-                <div>材料成本: <strong>${Math.round(materialCost)}</strong> (USD) ≈ <strong>${Math.round(materialCostTWD)}</strong> 元 (台幣)</div>
-                <div>飾品總價: <strong>${jewelryPrice}</strong> (USD) ≈ <strong>${Math.round(jewelryPriceTWD)}</strong> 元 (台幣)</div>
-                <div style="border-left-color: #007bff;">工錢約: <strong>${Math.round(craftsmanshipCostTWD)}</strong> 元 (台幣)</div>
-            `;
-        } else { // 台幣 (TWD)
-            const craftsmanshipCost = jewelryPrice - materialCost;
-            resultHtml = `
-                <div>材料成本約: <strong>${Math.round(materialCost)}</strong> 元 (台幣)</div>
-                <div style="border-left-color: #007bff;">工錢約: <strong>${Math.round(craftsmanshipCost)}</strong> 元 (台幣)</div>
-            `;
-        }
+        // 4. 將材料成本和總價，全部換算成 "台幣"
+        let materialCostTWD = (priceCurrency === 'USD') ? materialCost * exchangeRate : materialCost;
+        let jewelryPriceTWD = (totalPriceCurrency === 'USD') ? jewelryPrice * exchangeRate : jewelryPrice;
+        
+        // 5. 計算最終工錢
+        const craftsmanshipCostTWD = jewelryPriceTWD - materialCostTWD;
+        
+        let originalMaterialCostStr = `${Math.round(materialCost)} (${priceCurrency})`;
+        let originalJewelryPriceStr = `${Math.round(jewelryPrice)} (${totalPriceCurrency})`;
 
-        resultDiv.innerHTML = resultHtml;
+        resultDiv.innerHTML = `
+            <div>材料成本: <strong>${originalMaterialCostStr}</strong> ≈ <strong>${Math.round(materialCostTWD)}</strong> 元 (台幣)</div>
+            <div>飾品總價: <strong>${originalJewelryPriceStr}</strong> ≈ <strong>${Math.round(jewelryPriceTWD)}</strong> 元 (台幣)</div>
+            <div style="border-left-color: #007bff;">工錢約: <strong>${Math.round(craftsmanshipCostTWD)}</strong> 元 (台幣)</div>
+        `;
     }
 
-    // 頁面載入時先執行一次計算
     window.onload = convertUnits;
 </script>
 
