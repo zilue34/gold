@@ -6,7 +6,7 @@
     <title>貴金屬單位換算與工錢計算機</title>
     <style>
         body { font-family: 'Arial', sans-serif; padding: 20px; background-color: #f4f4f9; }
-        .container { max-width: 600px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .container { max-width: 600px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
         h1, h2 { text-align: center; color: #333; border-bottom: 2px solid #ffcc00; padding-bottom: 10px; margin-bottom: 30px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
         input[type="number"], select {
@@ -44,6 +44,27 @@
         .unit { font-weight: normal; color: #000; }
         .section-divider { margin-top: 40px; }
         #exchangeRateDiv { display: none; }
+
+        /* --- 新增表格樣式 --- */
+        .info-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            font-size: 0.95em;
+        }
+        .info-table th, .info-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .info-table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+        .info-table td {
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -124,7 +145,40 @@
     <button onclick="calculateCraftsmanship()">計算工錢</button>
 
     <div id="craftsmanshipResult"></div>
+</div>
 
+<div class="container">
+    <h2>工錢佔比參考表</h2>
+    <table class="info-table">
+        <thead>
+            <tr>
+                <th>工錢佔比區間</th>
+                <th>飾品類型</th>
+                <th>主要特點</th>
+                <th>購買建議</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>5% ~ 15%</strong></td>
+                <td><strong>投資型 / 原料型</strong><br>- 金條、金塊<br>- 素面戒指<br>- 基本款機器製金鍊</td>
+                <td>- 設計最簡約，工藝需求低<br>- 主要價值來自貴金屬本身<br>- 加工損耗與成本最低</td>
+                <td>適合以<strong>保值</strong>和<strong>避險</strong>為主要目的的買家。</td>
+            </tr>
+            <tr>
+                <td><strong>15% ~ 40%</strong></td>
+                <td><strong>市場主流飾品</strong><br>- 大多數珠寶店的項鍊、手鍊、耳環<br>- 有基本設計與造型</td>
+                <td>- 包含設計、開模、製作、拋光等成本<br>- 在設計感與材料價值間取得平衡<br>- 最常見的消費區間</td>
+                <td>適合日常配戴，兼顧<strong>美觀與一定保值性</strong>的買家。</td>
+            </tr>
+            <tr>
+                <td><strong>40% 以上</strong></td>
+                <td><strong>設計款 / 工藝款</strong><br>- 品牌設計師作品<br>- 手工訂製款<br>- 古法黃金、鏤空等複雜工藝</td>
+                <td>- <strong>價值核心在於設計與工藝</strong><br>- 品牌溢價、設計師心血、高難度工時<br>- 工錢可能高於材料成本</td>
+                <td>適合追求<strong>獨特性、藝術價值</strong>與<strong>品牌認同感</strong>的買家。</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 <script>
@@ -203,7 +257,7 @@
         let pricePerQian;
         switch (priceUnit) {
             case 'qian': pricePerQian = metalPrice; break;
-            case 'liang': pricePerQian = metalPrice / LIANG_TO_QIAN; break; // 新增台兩單價換算
+            case 'liang': pricePerQian = metalPrice / LIANG_TO_QIAN; break;
             case 'gram': pricePerQian = metalPrice * QIAN_TO_G; break;
             case 'ounce': pricePerQian = (metalPrice / OUNCE_TO_G) * QIAN_TO_G; break;
         }
@@ -215,7 +269,6 @@
         
         const craftsmanshipCostTWD = jewelryPriceTWD - materialCostTWD;
         
-        // 新增：計算工錢百分比
         const craftsmanshipPercentage = (jewelryPriceTWD > 0) ? ((craftsmanshipCostTWD / jewelryPriceTWD) * 100).toFixed(2) : 0;
         
         let originalMaterialCostStr = `${Math.round(materialCost)} (${priceCurrency})`;
