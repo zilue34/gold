@@ -45,25 +45,57 @@
         .section-divider { margin-top: 40px; }
         #exchangeRateDiv { display: none; }
 
-        /* --- 新增表格樣式 --- */
-        .info-table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-            font-size: 0.95em;
-        }
-        .info-table th, .info-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-            vertical-align: top;
-        }
-        .info-table th {
-            background-color: #f8f8f8;
-            font-weight: bold;
-        }
-        .info-table td {
-            line-height: 1.6;
+        .info-table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 0.95em; }
+        .info-table th, .info-table td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
+        .info-table th { background-color: #f8f8f8; font-weight: bold; }
+        .info-table td { line-height: 1.6; }
+
+        /* --- RWD 手機版響應式樣式 --- */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 20px; }
+            h1 { font-size: 1.8em; }
+            h2 { font-size: 1.5em; }
+
+            /* 讓輸入匡群組垂直堆疊 */
+            .input-group {
+                flex-direction: column;
+                gap: 0;
+                align-items: stretch;
+            }
+
+            /* 手機版表格樣式 */
+            .info-table thead {
+                display: none;
+            }
+            .info-table, .info-table tbody, .info-table tr, .info-table td {
+                display: block;
+                width: 100%;
+            }
+            .info-table tr {
+                margin-bottom: 15px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                overflow: hidden;
+            }
+            .info-table td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                padding-left: 50%; /* 留出空間給偽元素標題 */
+                position: relative;
+            }
+            .info-table td:last-child {
+                border-bottom: none;
+            }
+            .info-table td::before {
+                content: attr(data-label); /* 抓取 data-label 的內容 */
+                position: absolute;
+                left: 0;
+                width: 45%;
+                padding-left: 15px;
+                font-weight: bold;
+                text-align: left;
+            }
         }
     </style>
 </head>
@@ -160,22 +192,22 @@
         </thead>
         <tbody>
             <tr>
-                <td><strong>5% ~ 15%</strong></td>
-                <td><strong>投資型 / 原料型</strong><br>- 金條、金塊<br>- 素面戒指<br>- 基本款機器製金鍊</td>
-                <td>- 設計最簡約，工藝需求低<br>- 主要價值來自貴金屬本身<br>- 加工損耗與成本最低</td>
-                <td>適合以<strong>保值</strong>和<strong>避險</strong>為主要目的的買家。</td>
+                <td data-label="佔比區間"><strong>5% ~ 15%</strong></td>
+                <td data-label="飾品類型"><strong>投資型 / 原料型</strong><br>- 金條、金塊<br>- 素面戒指<br>- 基本款機器製金鍊</td>
+                <td data-label="主要特點">- 設計最簡約，工藝需求低<br>- 主要價值來自貴金屬本身<br>- 加工損耗與成本最低</td>
+                <td data-label="購買建議">適合以<strong>保值</strong>和<strong>避險</strong>為主要目的的買家。</td>
             </tr>
             <tr>
-                <td><strong>15% ~ 40%</strong></td>
-                <td><strong>市場主流飾品</strong><br>- 大多數珠寶店的項鍊、手鍊、耳環<br>- 有基本設計與造型</td>
-                <td>- 包含設計、開模、製作、拋光等成本<br>- 在設計感與材料價值間取得平衡<br>- 最常見的消費區間</td>
-                <td>適合日常配戴，兼顧<strong>美觀與一定保值性</strong>的買家。</td>
+                <td data-label="佔比區間"><strong>15% ~ 40%</strong></td>
+                <td data-label="飾品類型"><strong>市場主流飾品</strong><br>- 大多數珠寶店的項鍊、手鍊、耳環<br>- 有基本設計與造型</td>
+                <td data-label="主要特點">- 包含設計、開模、製作、拋光等成本<br>- 在設計感與材料價值間取得平衡<br>- 最常見的消費區間</td>
+                <td data-label="購買建議">適合日常配戴，兼顧<strong>美觀與一定保值性</strong>的買家。</td>
             </tr>
             <tr>
-                <td><strong>40% 以上</strong></td>
-                <td><strong>設計款 / 工藝款</strong><br>- 品牌設計師作品<br>- 手工訂製款<br>- 古法黃金、鏤空等複雜工藝</td>
-                <td>- <strong>價值核心在於設計與工藝</strong><br>- 品牌溢價、設計師心血、高難度工時<br>- 工錢可能高於材料成本</td>
-                <td>適合追求<strong>獨特性、藝術價值</strong>與<strong>品牌認同感</strong>的買家。</td>
+                <td data-label="佔比區間"><strong>40% 以上</strong></td>
+                <td data-label="飾品類型"><strong>設計款 / 工藝款</strong><br>- 品牌設計師作品<br>- 手工訂製款<br>- 古法黃金、鏤空等複雜工藝</td>
+                <td data-label="主要特點">- <strong>價值核心在於設計與工藝</strong><br>- 品牌溢價、設計師心血、高難度工時<br>- 工錢可能高於材料成本</td>
+                <td data-label="購買建議">適合追求<strong>獨特性、藝術價值</strong>與<strong>品牌認同感</strong>的買家。</td>
             </tr>
         </tbody>
     </table>
