@@ -71,7 +71,7 @@
     <div id="results"></div>
 
     <div class="note">
-        <p>* 換算基準：1 錢 = 3.75 公克；1 盎司 = 31.1035 公克。</p>
+        <p>* 換算基準：1 錢 = 3.75 公克；1 兩 = 10 錢；1 盎司 = 31.1035 公克。</p>
         <p>* 結果會四捨五入至小數點後四位。</p>
     </div>
 
@@ -88,6 +88,7 @@
             <label for="priceUnit">單價單位：</label>
             <select id="priceUnit">
                 <option value="qian">每台錢</option>
+                <option value="liang">每台兩</option>
                 <option value="gram">每公克</option>
                 <option value="ounce">每盎司</option>
             </select>
@@ -189,7 +190,6 @@
             return;
         }
 
-        // 1. 將重量換算成 "台錢"
         const weightUnit = document.getElementById('unit').value;
         let weightInQian;
         switch (weightUnit) {
@@ -199,24 +199,24 @@
             case 'ounce': weightInQian = (inputWeight * OUNCE_TO_G) / QIAN_TO_G; break;
         }
 
-        // 2. 將單價換算成 "每台錢" 的價格 (幣別先不處理)
         const priceUnit = document.getElementById('priceUnit').value;
         let pricePerQian;
         switch (priceUnit) {
             case 'qian': pricePerQian = metalPrice; break;
+            case 'liang': pricePerQian = metalPrice / LIANG_TO_QIAN; break; // 新增台兩單價換算
             case 'gram': pricePerQian = metalPrice * QIAN_TO_G; break;
             case 'ounce': pricePerQian = (metalPrice / OUNCE_TO_G) * QIAN_TO_G; break;
         }
         
-        // 3. 計算材料成本 (幣別先不處理)
         let materialCost = weightInQian * pricePerQian;
         
-        // 4. 將材料成本和總價，全部換算成 "台幣"
         let materialCostTWD = (priceCurrency === 'USD') ? materialCost * exchangeRate : materialCost;
         let jewelryPriceTWD = (totalPriceCurrency === 'USD') ? jewelryPrice * exchangeRate : jewelryPrice;
         
-        // 5. 計算最終工錢
         const craftsmanshipCostTWD = jewelryPriceTWD - materialCostTWD;
+        
+        // 新增：計算工錢百分比
+        const craftsmanshipPercentage = (jewelryPriceTWD > 0) ? ((craftsmanshipCostTWD / jewelryPriceTWD) * 100).toFixed(2) : 0;
         
         let originalMaterialCostStr = `${Math.round(materialCost)} (${priceCurrency})`;
         let originalJewelryPriceStr = `${Math.round(jewelryPrice)} (${totalPriceCurrency})`;
@@ -224,7 +224,10 @@
         resultDiv.innerHTML = `
             <div>材料成本: <strong>${originalMaterialCostStr}</strong> ≈ <strong>${Math.round(materialCostTWD)}</strong> 元 (台幣)</div>
             <div>飾品總價: <strong>${originalJewelryPriceStr}</strong> ≈ <strong>${Math.round(jewelryPriceTWD)}</strong> 元 (台幣)</div>
-            <div style="border-left-color: #007bff;">工錢約: <strong>${Math.round(craftsmanshipCostTWD)}</strong> 元 (台幣)</div>
+            <div style="border-left-color: #007bff;">
+                工錢約: <strong>${Math.round(craftsmanshipCostTWD)}</strong> 元 (台幣)
+                <span style="font-size: 0.9em; color: #555;">(佔總價 <strong>${craftsmanshipPercentage}%</strong>)</span>
+            </div>
         `;
     }
 
