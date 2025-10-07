@@ -31,7 +31,7 @@
             <input type="number" id="weight" value="1" min="0.001" step="any" oninput="convertUnits()">
         </div>
         <div style="flex-basis: 40%;">
-            <label for="unit">選擇單位：</label>
+            <label for="unit">選擇重量單位：</label>
             <select id="unit" onchange="convertUnits()">
                 <option value="qian">台錢 (錢)</option>
                 <option value="liang">台兩 (兩)</option>
@@ -54,8 +54,20 @@
 
     <h2>工錢返算</h2>
     
-    <label for="metalPrice">金/銀 單價 (每錢)：</label>
-    <input type="number" id="metalPrice" placeholder="輸入每台錢的價格" min="0">
+    <div class="input-group">
+        <div style="flex-basis: 60%;">
+            <label for="metalPrice">金/銀 單價：</label>
+            <input type="number" id="metalPrice" placeholder="輸入單價" min="0">
+        </div>
+        <div style="flex-basis: 40%;">
+            <label for="priceUnit">選擇單價單位：</label>
+            <select id="priceUnit">
+                <option value="qian">每台錢</option>
+                <option value="gram">每公克</option>
+                <option value="ounce">每盎司</option>
+            </select>
+        </div>
+    </div>
 
     <label for="jewelryPrice">金飾/銀飾 總價：</label>
     <input type="number" id="jewelryPrice" placeholder="輸入飾品總購買價" min="0">
@@ -70,29 +82,26 @@
     // 核心換算常數
     const QIAN_TO_G = 3.75;          // 1 錢 = 3.75 克
     const OUNCE_TO_G = 31.1035;      // 1 盎司 = 31.1035 克
-    const LIANG_TO_G = 37.5;         // 1 兩 = 37.5 克 (10 錢)
+    const LIANG_TO_QIAN = 10;        // 1 兩 = 10 錢
 
     function convertUnits() {
         const weightInput = document.getElementById('weight').value;
         const unitInput = document.getElementById('unit').value;
         const resultsDiv = document.getElementById('results');
 
-        // 檢查輸入是否為有效數字
         const inputWeight = parseFloat(weightInput);
         if (isNaN(inputWeight) || inputWeight <= 0) {
             resultsDiv.innerHTML = '<div>請輸入有效的重量數值。</div>';
             return;
         }
 
-        let baseGram; // 核心：轉換成公克 (g)
-
-        // 第一步：將所有輸入轉換成公克 (g)
+        let baseGram; 
         switch (unitInput) {
             case 'qian':
                 baseGram = inputWeight * QIAN_TO_G;
                 break;
             case 'liang':
-                baseGram = inputWeight * LIANG_TO_G;
+                baseGram = inputWeight * LIANG_TO_QIAN * QIAN_TO_G;
                 break;
             case 'gram':
                 baseGram = inputWeight;
@@ -100,17 +109,13 @@
             case 'ounce':
                 baseGram = inputWeight * OUNCE_TO_G;
                 break;
-            default:
-                baseGram = 0;
         }
 
-        // 第二步：將公克 (g) 轉換成所有目標單位
-        const resultLiang = baseGram / LIANG_TO_G;
         const resultQian = baseGram / QIAN_TO_G;
+        const resultLiang = resultQian / LIANG_TO_QIAN;
         const resultGram = baseGram;
         const resultOunce = baseGram / OUNCE_TO_G;
 
-        // 第三步：顯示結果
         resultsDiv.innerHTML = `
             <div><strong>${resultQian.toFixed(4)}</strong> <span class="unit">台錢 (錢)</span></div>
             <div><strong>${resultLiang.toFixed(4)}</strong> <span class="unit">台兩 (兩)</span></div>
@@ -121,8 +126,9 @@
 
     function calculateCraftsmanship() {
         const weightInput = document.getElementById('weight').value;
-        const unitInput = document.getElementById('unit').value;
+        const weightUnit = document.getElementById('unit').value;
         const metalPriceInput = document.getElementById('metalPrice').value;
+        const priceUnit = document.getElementById('priceUnit').value;
         const jewelryPriceInput = document.getElementById('jewelryPrice').value;
         const resultDiv = document.getElementById('craftsmanshipResult');
 
@@ -135,14 +141,16 @@
             return;
         }
 
-        // 將輸入重量統一換算成 "台錢"
+        // --- 核心修改：將所有單位換算成 "台錢" 進行計算 ---
+
+        // 1. 將輸入的重量，全部換算成 "台錢"
         let weightInQian;
-        switch (unitInput) {
+        switch (weightUnit) {
             case 'qian':
                 weightInQian = inputWeight;
                 break;
             case 'liang':
-                weightInQian = inputWeight * 10;
+                weightInQian = inputWeight * LIANG_TO_QIAN;
                 break;
             case 'gram':
                 weightInQian = inputWeight / QIAN_TO_G;
@@ -152,7 +160,22 @@
                 break;
         }
 
-        const materialCost = weightInQian * metalPrice;
+        // 2. 將輸入的單價，全部換算成 "每台錢" 的價格
+        let pricePerQian;
+        switch (priceUnit) {
+            case 'qian':
+                pricePerQian = metalPrice;
+                break;
+            case 'gram':
+                pricePerQian = metalPrice * QIAN_TO_G;
+                break;
+            case 'ounce':
+                pricePerQian = (metalPrice / OUNCE_TO_G) * QIAN_TO_G;
+                break;
+        }
+        
+        // 3. 計算成本與工錢
+        const materialCost = weightInQian * pricePerQian;
         const craftsmanshipCost = jewelryPrice - materialCost;
 
         if (craftsmanshipCost < 0) {
@@ -168,7 +191,7 @@
         }
     }
 
-    // 頁面載入時先執行一次計算，顯示預設值 1 錢的換算
+    // 頁面載入時先執行一次計算
     window.onload = convertUnits;
 </script>
 
