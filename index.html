@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>貴金屬單位換算計算機</title>
+    <title>貴金屬單位換算與工錢計算機</title>
     <style>
         body { font-family: 'Arial', sans-serif; padding: 20px; background-color: #f4f4f9; }
         .container { max-width: 600px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; border-bottom: 2px solid #ffcc00; padding-bottom: 10px; margin-bottom: 30px; }
+        h1, h2 { text-align: center; color: #333; border-bottom: 2px solid #ffcc00; padding-bottom: 10px; margin-bottom: 30px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
         input[type="number"], select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background-color: #ffaa00; color: white; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #e69500; }
         .input-group { display: flex; gap: 10px; align-items: flex-end; }
         .input-group > div { flex-grow: 1; }
-        #results div { background: #e9e9e9; padding: 15px; margin-top: 10px; border-radius: 5px; border-left: 5px solid #ffaa00; font-size: 1.1em; }
+        #results div, #craftsmanshipResult div { background: #e9e9e9; padding: 15px; margin-top: 10px; border-radius: 5px; border-left: 5px solid #ffaa00; font-size: 1.1em; }
         .note { margin-top: 25px; font-size: 0.9em; color: #888; text-align: center; }
         .unit { font-weight: normal; color: #000; }
+        .section-divider { margin-top: 40px; }
     </style>
 </head>
 <body>
@@ -46,6 +49,21 @@
         <p>* 換算基準：1 錢 = 3.75 公克；1 盎司 = 31.1035 公克。</p>
         <p>* 結果會四捨五入至小數點後四位。</p>
     </div>
+
+    <hr class="section-divider">
+
+    <h2>工錢返算</h2>
+    
+    <label for="metalPrice">金/銀 單價 (每錢)：</label>
+    <input type="number" id="metalPrice" placeholder="輸入每台錢的價格" min="0">
+
+    <label for="jewelryPrice">金飾/銀飾 總價：</label>
+    <input type="number" id="jewelryPrice" placeholder="輸入飾品總購買價" min="0">
+
+    <button onclick="calculateCraftsmanship()">計算工錢</button>
+
+    <div id="craftsmanshipResult"></div>
+
 </div>
 
 <script>
@@ -94,11 +112,60 @@
 
         // 第三步：顯示結果
         resultsDiv.innerHTML = `
-            <div>**${resultQian.toFixed(4)}** <span class="unit">台錢 (錢)</span></div>
-            <div>**${resultLiang.toFixed(4)}** <span class="unit">台兩 (兩)</span></div>
-            <div>**${resultGram.toFixed(4)}** <span class="unit">公克 (g)</span></div>
-            <div>**${resultOunce.toFixed(4)}** <span class="unit">盎司 (oz)</span></div>
+            <div><strong>${resultQian.toFixed(4)}</strong> <span class="unit">台錢 (錢)</span></div>
+            <div><strong>${resultLiang.toFixed(4)}</strong> <span class="unit">台兩 (兩)</span></div>
+            <div><strong>${resultGram.toFixed(4)}</strong> <span class="unit">公克 (g)</span></div>
+            <div><strong>${resultOunce.toFixed(4)}</strong> <span class="unit">盎司 (oz)</span></div>
         `;
+    }
+
+    function calculateCraftsmanship() {
+        const weightInput = document.getElementById('weight').value;
+        const unitInput = document.getElementById('unit').value;
+        const metalPriceInput = document.getElementById('metalPrice').value;
+        const jewelryPriceInput = document.getElementById('jewelryPrice').value;
+        const resultDiv = document.getElementById('craftsmanshipResult');
+
+        const inputWeight = parseFloat(weightInput);
+        const metalPrice = parseFloat(metalPriceInput);
+        const jewelryPrice = parseFloat(jewelryPriceInput);
+
+        if (isNaN(inputWeight) || inputWeight <= 0 || isNaN(metalPrice) || metalPrice <= 0 || isNaN(jewelryPrice) || jewelryPrice <= 0) {
+            resultDiv.innerHTML = '<div>請輸入有效的重量、單價與總價。</div>';
+            return;
+        }
+
+        // 將輸入重量統一換算成 "台錢"
+        let weightInQian;
+        switch (unitInput) {
+            case 'qian':
+                weightInQian = inputWeight;
+                break;
+            case 'liang':
+                weightInQian = inputWeight * 10;
+                break;
+            case 'gram':
+                weightInQian = inputWeight / QIAN_TO_G;
+                break;
+            case 'ounce':
+                weightInQian = (inputWeight * OUNCE_TO_G) / QIAN_TO_G;
+                break;
+        }
+
+        const materialCost = weightInQian * metalPrice;
+        const craftsmanshipCost = jewelryPrice - materialCost;
+
+        if (craftsmanshipCost < 0) {
+            resultDiv.innerHTML = `
+                <div>材料成本: <strong>${Math.round(materialCost)}</strong> 元</div>
+                <div>總價似乎低於材料成本，請檢查輸入數值。</div>
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div>材料成本約: <strong>${Math.round(materialCost)}</strong> 元</div>
+                <div>工錢約: <strong>${Math.round(craftsmanshipCost)}</strong> 元</div>
+            `;
+        }
     }
 
     // 頁面載入時先執行一次計算，顯示預設值 1 錢的換算
