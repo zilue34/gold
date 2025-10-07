@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貴金屬單位換算計算機</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; border-bottom: 2px solid #ffcc00; padding-bottom: 10px; margin-bottom: 30px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input[type="number"], select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        .input-group { display: flex; gap: 10px; align-items: flex-end; }
+        .input-group > div { flex-grow: 1; }
+        #results div { background: #e9e9e9; padding: 15px; margin-top: 10px; border-radius: 5px; border-left: 5px solid #ffaa00; font-size: 1.1em; }
+        .note { margin-top: 25px; font-size: 0.9em; color: #888; text-align: center; }
+        .unit { font-weight: normal; color: #000; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>黃金/白銀單位換算</h1>
+
+    <div class="input-group">
+        <div style="flex-basis: 60%;">
+            <label for="weight">輸入重量：</label>
+            <input type="number" id="weight" value="1" min="0.001" step="any" oninput="convertUnits()">
+        </div>
+        <div style="flex-basis: 40%;">
+            <label for="unit">選擇單位：</label>
+            <select id="unit" onchange="convertUnits()">
+                <option value="qian">台錢 (錢)</option>
+                <option value="liang">台兩 (兩)</option>
+                <option value="gram">公克 (g)</option>
+                <option value="ounce">盎司 (oz)</option>
+            </select>
+        </div>
+    </div>
+
+    <h2>換算結果</h2>
+    <div id="results">
+        </div>
+
+    <div class="note">
+        <p>* 換算基準：1 錢 = 3.75 公克；1 盎司 = 31.1035 公克。</p>
+        <p>* 結果會四捨五入至小數點後四位。</p>
+    </div>
+</div>
+
+<script>
+    // 核心換算常數
+    const QIAN_TO_G = 3.75;          // 1 錢 = 3.75 克
+    const OUNCE_TO_G = 31.1035;      // 1 盎司 = 31.1035 克
+    const LIANG_TO_G = 37.5;         // 1 兩 = 37.5 克 (10 錢)
+
+    function convertUnits() {
+        const weightInput = document.getElementById('weight').value;
+        const unitInput = document.getElementById('unit').value;
+        const resultsDiv = document.getElementById('results');
+
+        // 檢查輸入是否為有效數字
+        const inputWeight = parseFloat(weightInput);
+        if (isNaN(inputWeight) || inputWeight <= 0) {
+            resultsDiv.innerHTML = '<div>請輸入有效的重量數值。</div>';
+            return;
+        }
+
+        let baseGram; // 核心：轉換成公克 (g)
+
+        // 第一步：將所有輸入轉換成公克 (g)
+        switch (unitInput) {
+            case 'qian':
+                baseGram = inputWeight * QIAN_TO_G;
+                break;
+            case 'liang':
+                baseGram = inputWeight * LIANG_TO_G;
+                break;
+            case 'gram':
+                baseGram = inputWeight;
+                break;
+            case 'ounce':
+                baseGram = inputWeight * OUNCE_TO_G;
+                break;
+            default:
+                baseGram = 0;
+        }
+
+        // 第二步：將公克 (g) 轉換成所有目標單位
+        const resultLiang = baseGram / LIANG_TO_G;
+        const resultQian = baseGram / QIAN_TO_G;
+        const resultGram = baseGram;
+        const resultOunce = baseGram / OUNCE_TO_G;
+
+        // 第三步：顯示結果
+        resultsDiv.innerHTML = `
+            <div>**${resultQian.toFixed(4)}** <span class="unit">台錢 (錢)</span></div>
+            <div>**${resultLiang.toFixed(4)}** <span class="unit">台兩 (兩)</span></div>
+            <div>**${resultGram.toFixed(4)}** <span class="unit">公克 (g)</span></div>
+            <div>**${resultOunce.toFixed(4)}** <span class="unit">盎司 (oz)</span></div>
+        `;
+    }
+
+    // 頁面載入時先執行一次計算，顯示預設值 1 錢的換算
+    window.onload = convertUnits;
+</script>
+
+</body>
+</html>
